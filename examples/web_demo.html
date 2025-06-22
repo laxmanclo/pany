@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pany Multi-Modal Vector Database - Demo</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(45deg, #2196F3, #21CBF3);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            opacity: 0.9;
+            font-size: 1.1em;
+        }
+        
+        .main-content {
+            padding: 40px;
+        }
+        
+        .section {
+            margin-bottom: 40px;
+            padding: 30px;
+            border: 2px solid #f0f0f0;
+            border-radius: 10px;
+            background: #fafafa;
+        }
+        
+        .section h2 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 1.8em;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #555;
+        }
+        
+        input, textarea, select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+        
+        input:focus, textarea:focus, select:focus {
+            outline: none;
+            border-color: #2196F3;
+        }
+        
+        button {
+            background: linear-gradient(45deg, #2196F3, #21CBF3);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        
+        button:hover {
+            transform: translateY(-2px);
+        }
+        
+        .results {
+            margin-top: 20px;
+            padding: 20px;
+            background: white;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+        }
+        
+        .result-item {
+            padding: 15px;
+            margin-bottom: 10px;
+            background: #f8f9fa;
+            border-radius: 6px;
+            border-left: 4px solid #2196F3;
+        }
+        
+        .similarity-score {
+            background: #e3f2fd;
+            color: #1976d2;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.9em;
+            font-weight: bold;
+        }
+        
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+        
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #2196F3;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .error {
+            background: #ffebee;
+            color: #c62828;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #f44336;
+            margin-top: 10px;
+        }
+        
+        .success {
+            background: #e8f5e8;
+            color: #2e7d32;
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid #4caf50;
+            margin-top: 10px;
+        }
+        
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+        }
+        
+        @media (max-width: 768px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚀 Pany Multi-Modal Vector Database</h1>
+            <p>Test multi-modal embeddings and similarity search</p>
+        </div>
+        
+        <div class="main-content">
+            <div class="grid">
+                <!-- Create Embedding Section -->
+                <div class="section">
+                    <h2>📝 Create Embedding</h2>
+                    <form id="embedding-form">
+                        <div class="form-group">
+                            <label for="content-id">Content ID:</label>
+                            <input type="text" id="content-id" placeholder="e.g., doc1" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="modality">Modality:</label>
+                            <select id="modality" required>
+                                <option value="text">Text</option>
+                                <option value="image">Image (Base64)</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="content">Content:</label>
+                            <textarea id="content" rows="4" placeholder="Enter text or base64 encoded image..." required></textarea>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="metadata">Metadata (JSON):</label>
+                            <textarea id="metadata" rows="2" placeholder='{"category": "nature", "tags": ["sunset", "mountain"]}'>{}</textarea>
+                        </div>
+                        
+                        <button type="submit">Create Embedding</button>
+                    </form>
+                    
+                    <div id="embedding-loading" class="loading">
+                        <div class="spinner"></div>
+                        <p>Creating embedding...</p>
+                    </div>
+                    
+                    <div id="embedding-result"></div>
+                </div>
+                
+                <!-- Search Section -->
+                <div class="section">
+                    <h2>🔍 Search Similar Content</h2>
+                    <form id="search-form">
+                        <div class="form-group">
+                            <label for="search-query">Query:</label>
+                            <textarea id="search-query" rows="3" placeholder="Enter search text..." required></textarea>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="target-modality">Target Modality:</label>
+                            <select id="target-modality">
+                                <option value="">All</option>
+                                <option value="text">Text Only</option>
+                                <option value="image">Images Only</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="similarity-threshold">Similarity Threshold:</label>
+                            <input type="range" id="similarity-threshold" min="0" max="1" step="0.1" value="0.5">
+                            <span id="threshold-value">0.5</span>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="max-results">Max Results:</label>
+                            <input type="number" id="max-results" min="1" max="20" value="5">
+                        </div>
+                        
+                        <button type="submit">Search</button>
+                    </form>
+                    
+                    <div id="search-loading" class="loading">
+                        <div class="spinner"></div>
+                        <p>Searching...</p>
+                    </div>
+                    
+                    <div id="search-results"></div>
+                </div>
+            </div>
+            
+            <!-- Sample Data Section -->
+            <div class="section">
+                <h2>📚 Load Sample Data</h2>
+                <p>Quickly populate the database with sample embeddings for testing:</p>
+                <button onclick="loadSampleData()">Load Sample Data</button>
+                <div id="sample-loading" class="loading">
+                    <div class="spinner"></div>
+                    <p>Loading sample data...</p>
+                </div>
+                <div id="sample-result"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:8000';
+        
+        // Update threshold display
+        document.getElementById('similarity-threshold').addEventListener('input', function() {
+            document.getElementById('threshold-value').textContent = this.value;
+        });
+        
+        // Handle embedding form
+        document.getElementById('embedding-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const loading = document.getElementById('embedding-loading');
+            const result = document.getElementById('embedding-result');
+            
+            loading.style.display = 'block';
+            result.innerHTML = '';
+            
+            try {
+                const metadata = JSON.parse(document.getElementById('metadata').value);
+                
+                const response = await fetch(`${API_BASE}/embeddings`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        content_id: document.getElementById('content-id').value,
+                        modality: document.getElementById('modality').value,
+                        content: document.getElementById('content').value,
+                        metadata: metadata
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    result.innerHTML = `
+                        <div class="success">
+                            <strong>✅ Success!</strong><br>
+                            Embedding created for: ${data.content_id}<br>
+                            Modality: ${data.modality}<br>
+                            Embedding dimension: ${data.embedding.length}
+                        </div>
+                    `;
+                } else {
+                    throw new Error(data.detail || 'Failed to create embedding');
+                }
+                
+            } catch (error) {
+                result.innerHTML = `
+                    <div class="error">
+                        <strong>❌ Error:</strong><br>
+                        ${error.message}
+                    </div>
+                `;
+            } finally {
+                loading.style.display = 'none';
+            }
+        });
+        
+        // Handle search form
+        document.getElementById('search-form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const loading = document.getElementById('search-loading');
+            const results = document.getElementById('search-results');
+            
+            loading.style.display = 'block';
+            results.innerHTML = '';
+            
+            try {
+                const targetModality = document.getElementById('target-modality').value;
+                
+                const response = await fetch(`${API_BASE}/search`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        query: document.getElementById('search-query').value,
+                        query_modality: 'text',
+                        target_modality: targetModality || null,
+                        similarity_threshold: parseFloat(document.getElementById('similarity-threshold').value),
+                        max_results: parseInt(document.getElementById('max-results').value)
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    if (data.results.length === 0) {
+                        results.innerHTML = `
+                            <div class="results">
+                                <p>No results found. Try lowering the similarity threshold or adding more content.</p>
+                            </div>
+                        `;
+                    } else {
+                        let html = `
+                            <div class="results">
+                                <h3>Found ${data.total_results} results in ${data.execution_time_ms.toFixed(2)}ms</h3>
+                        `;
+                        
+                        data.results.forEach((result, index) => {
+                            html += `
+                                <div class="result-item">
+                                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                                        <strong>${result.content_id}</strong>
+                                        <span class="similarity-score">${(result.similarity * 100).toFixed(1)}%</span>
+                                    </div>
+                                    <div style="color: #666; margin-bottom: 5px;">
+                                        Modality: ${result.modality}
+                                    </div>
+                                    <div style="margin-bottom: 10px;">
+                                        ${result.content.length > 200 ? result.content.substring(0, 200) + '...' : result.content}
+                                    </div>
+                                    ${Object.keys(result.metadata).length > 0 ? 
+                                        `<div style="font-size: 0.9em; color: #888;">
+                                            Metadata: ${JSON.stringify(result.metadata)}
+                                        </div>` : ''
+                                    }
+                                </div>
+                            `;
+                        });
+                        
+                        html += '</div>';
+                        results.innerHTML = html;
+                    }
+                } else {
+                    throw new Error(data.detail || 'Search failed');
+                }
+                
+            } catch (error) {
+                results.innerHTML = `
+                    <div class="error">
+                        <strong>❌ Search Error:</strong><br>
+                        ${error.message}
+                    </div>
+                `;
+            } finally {
+                loading.style.display = 'none';
+            }
+        });
+        
+        // Load sample data
+        async function loadSampleData() {
+            const loading = document.getElementById('sample-loading');
+            const result = document.getElementById('sample-result');
+            
+            loading.style.display = 'block';
+            result.innerHTML = '';
+            
+            const sampleData = [
+                {
+                    content_id: 'nature1',
+                    modality: 'text',
+                    content: 'A beautiful sunset over the mountains with golden light reflecting on the lake',
+                    metadata: { category: 'nature', tags: ['sunset', 'mountains', 'lake'] }
+                },
+                {
+                    content_id: 'city1',
+                    modality: 'text',
+                    content: 'Modern city skyline with tall skyscrapers and busy streets filled with people',
+                    metadata: { category: 'urban', tags: ['city', 'buildings', 'people'] }
+                },
+                {
+                    content_id: 'animal1',
+                    modality: 'text',
+                    content: 'Cute cat playing with a ball of yarn in a sunny garden',
+                    metadata: { category: 'animals', tags: ['cat', 'playing', 'garden'] }
+                },
+                {
+                    content_id: 'food1',
+                    modality: 'text',
+                    content: 'Fresh pizza with melted cheese, pepperoni, and herbs from the oven',
+                    metadata: { category: 'food', tags: ['pizza', 'cheese', 'italian'] }
+                },
+                {
+                    content_id: 'tech1',
+                    modality: 'text',
+                    content: 'Advanced artificial intelligence and machine learning algorithms processing data',
+                    metadata: { category: 'technology', tags: ['AI', 'machine learning', 'data'] }
+                }
+            ];
+            
+            try {
+                let successCount = 0;
+                for (const item of sampleData) {
+                    const response = await fetch(`${API_BASE}/embeddings`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(item)
+                    });
+                    
+                    if (response.ok) {
+                        successCount++;
+                    }
+                }
+                
+                result.innerHTML = `
+                    <div class="success">
+                        <strong>✅ Sample Data Loaded!</strong><br>
+                        Successfully created ${successCount}/${sampleData.length} embeddings.<br>
+                        You can now test the search functionality.
+                    </div>
+                `;
+                
+            } catch (error) {
+                result.innerHTML = `
+                    <div class="error">
+                        <strong>❌ Error loading sample data:</strong><br>
+                        ${error.message}
+                    </div>
+                `;
+            } finally {
+                loading.style.display = 'none';
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,42 @@
+version: '3.8'
+
+services:
+  # PostgreSQL with pgvector extension
+  database:
+    image: pgvector/pgvector:pg16
+    container_name: pany_postgres
+    environment:
+      POSTGRES_DB: pany_vectordb
+      POSTGRES_USER: pany_user
+      POSTGRES_PASSWORD: pany_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U pany_user -d pany_vectordb"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # Embedding service (FastAPI + CLIP)
+  embedding-service:
+    build: ./embedding-service
+    container_name: pany_embedding_service
+    ports:
+      - "8000:8000"
+    environment:
+      DATABASE_URL: postgresql://pany_user:pany_password@database:5432/pany_vectordb
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}  # Optional: for OpenAI embeddings
+    depends_on:
+      database:
+        condition: service_healthy
+    volumes:
+      - ./embedding-service:/app
+      - embedding_cache:/app/cache  # Cache for models
+    command: uvicorn main:app --host 0.0.0.0 --port 8000 --reload
+
+volumes:
+  postgres_data:
+  embedding_cache:
