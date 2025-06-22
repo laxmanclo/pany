@@ -47,7 +47,6 @@ open http://localhost:8000/demo
 
 📖 **[→ Complete Quick Start Guide](QUICKSTART.md)**
 🏗️ **[→ Technical Architecture](ARCHITECTURE.md)**
-🎯 **[→ Why Pany Beats Vector Databases](examples/why_pany_wins.py)**
 
 ## 🚀 What Makes This Different
 
