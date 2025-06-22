@@ -538,8 +538,8 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 📞 Support
 
-- **Documentation:** (yet to be  made)[docs.pany.ai](https://docs.pany.ai)
-- **Community:** [Discord]yet to be made
+- **Documentation:** [docs.pany.ai](https://docs.pany.ai)(when ready)
+- **Community:** [Discord](when ready)
 - **Issues:** [GitHub Issues](https://github.com/laxmanclo/pany.cloud/issues)
 - **Email:** laxmansrivastacc@gmail.com
 
