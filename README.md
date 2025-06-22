@@ -106,7 +106,6 @@ JOIN support_docs ON doc_id = content_id;
 
 ## 📊 Performance
 
-- **Search latency**: <50ms average
 - **Throughput**: 100+ concurrent searches
 - **Storage**: ~1KB per embedding
 - **Scaling**: Linear with PostgreSQL
@@ -324,7 +323,6 @@ results = pany.search(client_description, project="listings")
 
 ### **Benchmarks** (tested on 4-core, 8GB RAM)
 - **Upload speed:** ~2MB/sec document processing
-- **Search latency:** <50ms average response time
 - **Throughput:** 100+ concurrent searches
 - **Storage:** ~1KB per document embedding
 - **Accuracy:** 85-95% relevance for semantic queries
