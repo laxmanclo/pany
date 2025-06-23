@@ -362,4 +362,77 @@ spec:
 - [ ] Set resource limits and scaling rules
 
 ```
+<<<<<<< HEAD
 Do star :D and support if it made your life easier, and also report issues, and always welcome to fix whats broken :)
+=======
+
+### **Code Style**
+- Use **Black** for code formatting
+- Follow **PEP 8** conventions
+- Add **type hints** for all functions
+- Write **docstrings** for public APIs
+- Add **tests** for new features
+
+### **Pull Request Process**
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Make your changes with tests
+4. Ensure CI passes
+5. Submit a pull request
+
+## 📝 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🛣️ Roadmap
+
+### **v1.0 - Core Features** ✅
+- Multi-modal search with CLIP
+- PostgreSQL + pgvector backend
+- REST API with documentation
+- Docker deployment
+- Web dashboard
+
+### **v1.1 - Developer Experience** 🔄
+- [ ] React/Vue component libraries
+- [ ] Python/JavaScript SDKs
+- [ ] Kubernetes deployment manifests
+- [ ] Performance optimization
+- [ ] Advanced filtering and facets
+
+### **v1.2 - Enterprise Features** 📋
+- [ ] Authentication and authorization
+- [ ] Multi-tenancy support
+- [ ] Advanced analytics dashboard
+- [ ] Webhook system
+- [ ] Plugin architecture
+
+### **v2.0 - AI Features** 🤖
+- [ ] Question answering over documents
+- [ ] Document summarization
+- [ ] Custom model fine-tuning
+- [ ] Advanced RAG (Retrieval Augmented Generation)
+- [ ] Multi-language support
+
+## 📞 Support
+
+- **Documentation:** [docs.pany.ai](https://docs.pany.ai)(when ready)
+- **Community:** [Discord](when ready)
+- **Issues:** [GitHub Issues](https://github.com/laxmanclo/pany.cloud/issues)
+- **Email:** laxmansrivastacc@gmail.com
+
+## 🌟 Show Your Support
+
+If Pany helps your project, consider:
+- ⭐ Star this repository
+- 🐛 Report bugs and request features
+- 📝 Contribute code or documentation
+- 💬 Share your use case in discussions
+- 🎉 Spread the word!
+
+---
+
+**Transform your content into searchable intelligence. Upload, search, discover. It's that simple.**
+
+*Built with ❤️ for developers who need semantic search without the complexity.*
+>>>>>>> 84e3e82d23ab63f5db9e2e3a0f7fb0fd7eff9b00
