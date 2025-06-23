@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "pany"
-version = "1.0.0"
-description = "PostgreSQL-native semantic search engine with multi-modal support"
+version = "0.1.0"
+description = "PostgreSQL-native semantic search engine with multi-modal support (Beta)"
 readme = "README.md"
 license = {text = "MIT"}
 authors = [
@@ -24,7 +24,7 @@ keywords = [
     "rag"
 ]
 classifiers = [
-    "Development Status :: 4 - Beta",
+    "Development Status :: 3 - Alpha",
     "Intended Audience :: Developers",
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",

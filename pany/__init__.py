@@ -5,7 +5,7 @@ A self-hosted semantic search solution that leverages PostgreSQL's vector capabi
 for efficient similarity search across text, images, and documents.
 """
 
-__version__ = '1.0.0'
+__version__ = '0.1.0'
 __author__ = 'Pany Team'
 __email__ = 'hello@pany.ai'
 

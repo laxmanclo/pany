@@ -1,5 +1,7 @@
 # Pany
 
+**⚠️ Beta Software**: This is early-stage software. API may change between versions before v1.0.0.
+
 Semantic search that works inside PostgreSQL. Upload documents and images, then search them with natural language.
 
 Instead of setting up a separate vector database like Pinecone or Weaviate, Pany uses your existing PostgreSQL database with the pgvector extension.
