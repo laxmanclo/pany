@@ -12,13 +12,13 @@ from datetime import datetime
 from contextlib import asynccontextmanager
 
 # Import our models and services
-from models import (
+from .models import (
     EmbeddingRequest, EmbeddingResponse, SearchRequest, SearchResponse,
     SearchResult, HealthResponse, ErrorResponse
 )
-from services import embedding_service, db_service
-from services.file_processor import file_processor
-from config import settings
+from .services import embedding_service, db_service
+from .services.file_processor import file_processor
+from .config import settings
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -78,7 +78,7 @@ async def health_check():
         status="healthy" if (embedding_service.is_ready() and db_service.is_ready()) else "unhealthy",
         version=settings.api_version,
         database_connected=db_service.is_ready(),
-        model_loaded=embedding_service.is_ready(),
+        ml_model_loaded=embedding_service.is_ready(),
         timestamp=datetime.now()
     )
 
@@ -1724,3 +1724,36 @@ async def get_rag_demo():
 </body>
 </html>'''
     return HTMLResponse(content=rag_html)
+
+
+def main():
+    """Main entry point for the CLI"""
+    import argparse
+    import uvicorn
+    
+    parser = argparse.ArgumentParser(description="Pany - PostgreSQL-native semantic search engine")
+    parser.add_argument("--host", default=os.getenv("HOST", "0.0.0.0"), help="Host to bind to")
+    parser.add_argument("--port", type=int, default=int(os.getenv("PORT", "8000")), help="Port to bind to")
+    parser.add_argument("--reload", action="store_true", help="Enable auto-reload for development")
+    parser.add_argument("--workers", type=int, default=1, help="Number of worker processes")
+    parser.add_argument("--log-level", default="info", choices=["debug", "info", "warning", "error"], 
+                       help="Log level")
+    
+    args = parser.parse_args()
+    
+    logger.info(f"Starting Pany server on {args.host}:{args.port}")
+    logger.info("Access the web interface at: http://{}:{}".format(args.host, args.port))
+    logger.info("API documentation at: http://{}:{}/docs".format(args.host, args.port))
+    
+    uvicorn.run(
+        "pany.main:app",
+        host=args.host,
+        port=args.port,
+        reload=args.reload,
+        workers=args.workers if not args.reload else 1,
+        log_level=args.log_level
+    )
+
+
+if __name__ == "__main__":
+    main()

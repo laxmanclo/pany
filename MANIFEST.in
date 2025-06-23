@@ -1,0 +1,17 @@
+include README.md
+include LICENSE
+include CHANGELOG.md
+include requirements.txt
+include INSTALLATION.md
+include QUICKSTART.md
+include ARCHITECTURE.md
+recursive-include pany *.py
+recursive-include database *.sql
+recursive-include examples *.py *.html
+exclude embedding-service/*
+exclude tests/*
+global-exclude *.pyc
+global-exclude __pycache__
+global-exclude .DS_Store
+global-exclude *.so
+global-exclude *.dylib

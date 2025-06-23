@@ -1,274 +1,164 @@
-# 🔍 Pany - PostgreSQL-Native Semantic Search
+# Pany
 
-**The only semantic search engine that runs entirely inside PostgreSQL.**
+Semantic search that works inside PostgreSQL. Upload documents and images, then search them with natural language.
 
-No separate vector database, no vendor lock-in, no monthly fees. Just add semantic search to your existing PostgreSQL setup.
+Instead of setting up a separate vector database like Pinecone or Weaviate, Pany uses your existing PostgreSQL database with the pgvector extension.
 
-[![Docker](https://img.shields.io/badge/Docker-Ready-blue?logo=docker)](https://hub.docker.com/r/pany/pany)
-[![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
-[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-pgvector-blue?logo=postgresql)](https://github.com/pgvector/pgvector)
+📖 **[Technical Architecture](ARCHITECTURE.md)** - Detailed system design and implementation
 
-## 🎯 Why Pany?
-
-### **The Problem with Vector Databases**
-- **Pinecone**: $70+/month + vendor lock-in
-- **Weaviate/Chroma**: Complex setup + separate infrastructure
-- **All of them**: Can't join with your business data
-
-### **The Pany Solution**
-```sql
--- This is IMPOSSIBLE with traditional vector databases
-SELECT p.name, p.price, p.inventory,
-       s.similarity_score
-FROM products p
-JOIN semantic_search('red summer dress', 0.7) s ON p.id = s.content_id
-WHERE p.in_stock = true AND p.price < 100
-ORDER BY s.similarity_score DESC;
-```
-
-**One query. Semantic search + business logic. All in PostgreSQL.**
-
-## ⚡ Quick Start
+## Install and Run
 
 ```bash
-# 1. Clone and start
-git clone https://github.com/your-org/pany.git
-cd pany
+pip install pany
+pany
+```
+
+Go to http://localhost:8000 to upload files and start searching.
+
+### Requirements
+- Python 3.9+
+- PostgreSQL with pgvector extension
+- 4GB RAM minimum
+
+### Configuration
+
+```bash
+# Custom database
+export DATABASE_URL="postgresql://user:pass@localhost:5432/mydb"
+
+# Custom port
+pany --port 8080
+
+# Or use Docker
+git clone https://github.com/laxmanclo/pany.cloud.git
+cd pany.cloud
 docker-compose up -d
-
-# 2. Setup demo data
-curl -X POST http://localhost:8000/setup-demo
-
-# 3. See the demo
-open http://localhost:8000/demo
 ```
 
-**That's it.** You now have semantic search running in PostgreSQL.
+## What it does
 
-📖 **[→ Complete Quick Start Guide](QUICKSTART.md)**
-🏗️ **[→ Technical Architecture](ARCHITECTURE.md)**
+**Upload stuff**: Drop PDFs, images, text files into the web interface
+**Search naturally**: Type "find the red car" or "contract with Microsoft" 
+**Get results**: Finds semantically similar content, not just keyword matches
 
-## 🚀 What Makes This Different
+Works with text and images. You can search for images using text descriptions, or upload an image to find similar ones.
 
-### **1. PostgreSQL Integration**
-- **Uses your existing database** - no new infrastructure
-- **Native SQL joins** - combine search with business data
-- **Familiar tooling** - backup, replication, monitoring you already know
+## Code Examples
 
-### **2. Multi-Modal Out-of-the-Box**
-- **Text + Image search** using OpenAI's CLIP model
-- **Cross-modal queries** - find images with text, text with images
-- **Single embedding space** - consistent similarity across modalities
-
-### **3. Cost & Complexity**
-- **$0/month** vs $70+/month for hosted solutions
-- **10-minute setup** vs weeks of integration
-- **No vendor lock-in** - it's your database, your data
-
-## 💡 Use Cases
-
-### **E-commerce: Visual Product Search**
 ```python
-# Customer uploads photo → finds similar products
-results = search_by_image("customer_photo.jpg")
-# Combine with business logic in SQL
+from pany import PanyClient
+
+client = PanyClient()
+
+# Upload files
+client.upload_file("product_catalog.pdf", project_id="store")
+client.upload_file("car_photo.jpg", project_id="store")
+
+# Search with text
+results = client.search("red sedan", project_id="store")
+
+# Search with image
+results = client.search_by_image("my_car.jpg", project_id="store")
 ```
 
-### **Customer Support: Semantic Knowledge Base**
+## SQL Integration
+
+The main advantage over other vector databases is that you can join search results with your existing data:
+
 ```sql
--- Find solutions across all documentation
-SELECT doc_title, solution, similarity
-FROM semantic_search('login not working', 0.8)
-JOIN support_docs ON doc_id = content_id;
+SELECT 
+    products.name, 
+    products.price, 
+    search.similarity_score
+FROM products 
+JOIN semantic_search('comfortable shoes', 0.7) search 
+    ON products.id = search.content_id
+WHERE products.in_stock = true
+ORDER BY search.similarity_score DESC;
 ```
 
-### **Content Management: Asset Discovery**
-```python
-# "Find images like this that we can legally use"
-# Combines visual similarity + license data + performance metrics
-```
+This is impossible with most vector databases because they're separate systems.
 
-## 🛠️ Architecture
+## Why PostgreSQL?
 
-```
-┌─────────────────┐    ┌──────────────────┐    ┌─────────────────┐
-│   Your App      │    │   Pany API       │    │  PostgreSQL     │
-│                 │◄──►│   FastAPI        │◄──►│  + pgvector     │
-│   Web Dashboard │    │   + CLIP Model   │    │   + Your Data   │
-└─────────────────┘    └──────────────────┘    └─────────────────┘
-```
+Because you probably already have PostgreSQL running your app. Instead of:
+1. Setting up another database (Pinecone, Weaviate, etc.)
+2. Keeping data in sync between systems
+3. Learning new APIs and query languages
+4. Paying monthly fees
 
-- **Backend**: FastAPI + CLIP embeddings
-- **Database**: PostgreSQL + pgvector extension  
-- **Deployment**: Docker Compose (one command)
-- **Frontend**: Built-in demo + embeddable widget
+You just add pgvector to your existing database and you're done.
+contact me for another db: laxmansrivastacc@gmail.com(a simple mail works, come on call or anything of the sort.)
 
-## 📊 Performance
+## API
 
-- **Throughput**: 100+ concurrent searches
-- **Storage**: ~1KB per embedding
-- **Scaling**: Linear with PostgreSQL
+REST endpoints for integration:
 
-## 🔧 API Usage
-
-### **Upload & Index Content**
 ```bash
+# Upload content
 curl -X POST http://localhost:8000/embeddings \
-  -d '{"content_id": "doc1", "modality": "text", "content": "Your content here"}'
-```
+  -F "file=@document.pdf" \
+  -F "project_id=myproject"
 
-### **Semantic Search**
-```bash
+# Search
 curl -X POST http://localhost:8000/search \
-  -d '{"query": "find similar content", "query_modality": "text", "max_results": 5}'
+  -H "Content-Type: application/json" \
+  -d '{"query": "find something", "project_id": "myproject"}'
 ```
 
-### **Embed Search Widget**
-```html
-<script src="http://localhost:8000/widget.js"></script>
-<div id="pany-search"></div>
-```
+## How it works
 
-## 💰 Cost Comparison
+1. **Embedding**: Uses CLIP model to convert text and images into vectors
+2. **Storage**: Saves vectors in PostgreSQL using pgvector extension  
+3. **Search**: Finds similar vectors using cosine similarity
+4. **Results**: Returns content ranked by similarity score
 
-| Solution | Monthly Cost | Setup Time | SQL Joins | Your Data |
-|----------|-------------|------------|-----------|-----------|
-| **Pany** | **$0** | **10 minutes** | **✅ Native** | **✅ Yours** |
-| Pinecone | $70+ | 2-4 weeks | ❌ Complex | ❌ Vendor |
-| Weaviate | $50+ | 1-2 weeks | ❌ Separate | ❌ Vendor |
+The CLIP model means you can search across different types of content - find images with text queries, or text with image queries.
 
-## 🤝 Contributing
+## Common use cases
 
-We welcome contributions! This project is MIT licensed and designed to be:
-- **Simple to deploy** (Docker Compose)
-- **Easy to extend** (FastAPI + PostgreSQL)
-- **Production ready** (async/await, proper error handling)
+- **Product search**: Upload product catalog, let customers search "red leather shoes"
+- **Document management**: Search PDFs and docs with natural language
+- **Media libraries**: Find images by describing what's in them
+- **Knowledge bases**: Semantic search through support docs
 
-## 📞 Support
+## Environment variables
 
-- **Demo**: [http://localhost:8000/demo](http://localhost:8000/demo) (after setup)
-- **API Docs**: [http://localhost:8000/docs](http://localhost:8000/docs)
-- **Issues**: [GitHub Issues](https://github.com/your-org/pany/issues)
-
----
-
-**Transform your PostgreSQL into a semantic search engine. No separate databases, no vendor fees, no complexity.**
-
-*Built for developers who want semantic search without the semantic headaches.*
-
-## 🚀 Why Pany Wins
-
-### **1. PostgreSQL Integration = Game Changer**
-```sql
--- This is IMPOSSIBLE with Pinecone/Weaviate
-SELECT p.name, p.price, e.similarity_score
-FROM products p
-JOIN semantic_search('red leather shoes', 0.7) e ON p.id = e.product_id
-WHERE p.in_stock = true
-ORDER BY e.similarity_score DESC;
-```
-
-**Competitors force you to:**
-- ❌ Maintain separate vector database
-- ❌ Keep data in sync across systems  
-- ❌ Learn new query languages
-- ❌ Pay per query/storage
-
-**Pany lets you:**
-- ✅ **Join semantic search with business data** (pricing, inventory, users)
-- ✅ **Use familiar SQL** - no new APIs to learn
-- ✅ **Leverage existing PostgreSQL** infrastructure
-- ✅ **Zero additional hosting costs**
-
-### **2. True Multi-Modal Understanding**
-```python
-# Find products similar to this image
-results = search_by_image("user_uploaded_photo.jpg")
-# Returns: ["Red Nike Shoes", "Crimson Boots", "Ruby Slippers"]
-
-# Find images matching this text  
-results = search_by_text("cozy winter cabin")
-# Returns: [fireplace.jpg, snow_house.png, mountain_lodge.jpg]
-```
-
-**Most solutions:**
-- ❌ Text-only search
-- ❌ Separate models for images/text
-- ❌ Complex embedding pipelines
-
-**Pany:**
-- ✅ **CLIP-powered cross-modal search** out of the box
-- ✅ **Search images with text, text with images**
-- ✅ **Single model, consistent results**
-
-### **3. Business-Ready, Not Just Developer-Ready**
-```html
-<!-- Drop this in your website -->
-<script src="your-domain.com/widget.js" data-project="store123"></script>
-<div id="pany-search"></div>
-<!-- Boom - semantic search live -->
-```
-
-**Typical vector DB workflow:**
-1. Learn vector concepts
-2. Set up separate infrastructure  
-3. Build custom frontend
-4. Handle embedding generation
-5. Manage data synchronization
-
-**Pany workflow:**
-1. `docker-compose up`
-2. Upload files via drag-and-drop
-3. Copy/paste widget code
-4. **Done.**
---- 
-
-## ⚡ Quick Start
-
-### **Proof of Value in 10 Minutes**
 ```bash
-# 1. Start Pany
-git clone https://github.com/your-org/pany.git
-cd pany
-docker-compose up -d
-
-# 2. Upload test files
-curl -X POST "http://localhost:8000/api/upload" \
-  -F "file=@product_catalog.pdf" \
-  -F "project_id=demo"
-
-# 3. Test multi-modal search
-curl -X POST "http://localhost:8000/api/search" \
-  -d '{"query": "red shoes", "project_id": "demo"}'
+DATABASE_URL="postgresql://user:pass@host:5432/db"
+HOST="0.0.0.0"
+PORT="8000" 
+EMBEDDING_MODEL="all-MiniLM-L6-v2"
+OPENAI_API_KEY="sk-..."  # optional
+UPLOAD_DIR="./uploads"
 ```
 
-### **See the Magic**
-- **Text finds images**: Query "red car" returns car photos
-- **Images find text**: Upload car photo, get car descriptions
-- **SQL joins**: Combine search with your existing data
-- **Widget embed**: Copy/paste search into any website
+## Development
 
-## 💵 Cost Comparison (Annual)
+```bash
+git clone https://github.com/laxmanclo/pany.cloud.git
+cd pany.cloud
+pip install -r requirements.txt
+python -m pany.main
+```
 
-| Feature | Pinecone | Weaviate Cloud | Pany |
-|---------|----------|----------------|------|
-| **Basic Plan** | $840/year | $600/year | **$0/year** |
-| **1M vectors** | $2,100/year | $1,200/year | **$0/year** |
-| **Multi-modal** | Extra cost | Not available | **Included** |
-| **SQL joins** | Impossible | Complex | **Native** |
-| **Data ownership** | Vendor | Vendor | **You** |
-| **Setup time** | 2-4 weeks | 1-2 weeks | **10 minutes** |
+Run tests: `pytest tests/`
 
-**Annual savings: $840-$2,100 per project**
+## Contributing
 
-## 🎯 Proven Use Cases & ROI
+Fork the repo, make changes, submit PR. 
 
-### **E-commerce: Visual Product Search**
-**Problem**: Customers can't find products, 40% bounce rate on search
-**Solution**: "Find products like this image" functionality
-```python
-# Customer uploads image, finds similar products
-results = pany.search_by_image("customer_photo.jpg", project="store")
+Code style: use Black formatter, add type hints, write tests.
+
+## License
+
+MIT License
+
+## Issues
+
+Report bugs at https://github.com/laxmanclo/pany.cloud/issues
+
+Contact: laxmansrivastacc@gmail.com
 # Results: [{"name": "Red Nike Air Max", "similarity": 0.89}, ...]
 ```
 **ROI**: 15-25% conversion rate increase = $50k-200k/year additional revenue
@@ -366,7 +256,7 @@ class CustomEmbeddingService:
         return self.model.encode(text).tolist()
 ```
 
-## 🔌 Integrations
+## Integrations
 
 ### **Website Widget**
 ```javascript
@@ -469,91 +359,5 @@ spec:
 - [ ] Configure backup strategy
 - [ ] Set resource limits and scaling rules
 
-## 🤝 Contributing
-
-We welcome contributions! Here's how to get started:
-
-### **Development Setup**
-```bash
-git clone https://github.com/your-org/pany.git
-cd pany
-
-# Start development environment
-docker-compose -f docker-compose.dev.yml up -d
-
-# Install Python dependencies
-pip install -r requirements-dev.txt
-
-# Run tests
-pytest tests/
 ```
-
-### **Code Style**
-- Use **Black** for code formatting
-- Follow **PEP 8** conventions
-- Add **type hints** for all functions
-- Write **docstrings** for public APIs
-- Add **tests** for new features
-
-### **Pull Request Process**
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Make your changes with tests
-4. Ensure CI passes
-5. Submit a pull request
-
-## 📝 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## 🛣️ Roadmap
-
-### **v1.0 - Core Features** ✅
-- Multi-modal search with CLIP
-- PostgreSQL + pgvector backend
-- REST API with documentation
-- Docker deployment
-- Web dashboard
-
-### **v1.1 - Developer Experience** 🔄
-- [ ] React/Vue component libraries
-- [ ] Python/JavaScript SDKs
-- [ ] Kubernetes deployment manifests
-- [ ] Performance optimization
-- [ ] Advanced filtering and facets
-
-### **v1.2 - Enterprise Features** 📋
-- [ ] Authentication and authorization
-- [ ] Multi-tenancy support
-- [ ] Advanced analytics dashboard
-- [ ] Webhook system
-- [ ] Plugin architecture
-
-### **v2.0 - AI Features** 🤖
-- [ ] Question answering over documents
-- [ ] Document summarization
-- [ ] Custom model fine-tuning
-- [ ] Advanced RAG (Retrieval Augmented Generation)
-- [ ] Multi-language support
-
-## 📞 Support
-
-- **Documentation:** (yet to be  made)[docs.pany.ai](https://docs.pany.ai)
-- **Community:** [Discord]yet to be made
-- **Issues:** [GitHub Issues](https://github.com/laxmanclo/pany.cloud/issues)
-- **Email:** laxmansrivastacc@gmail.com
-
-## 🌟 Show Your Support
-
-If Pany helps your project, consider:
-- ⭐ Star this repository
-- 🐛 Report bugs and request features
-- 📝 Contribute code or documentation
-- 💬 Share your use case in discussions
-- 🎉 Spread the word!
-
----
-
-**Transform your content into searchable intelligence. Upload, search, discover. It's that simple.**
-
-*Built with ❤️ for developers who need semantic search without the complexity.*
+Do star :D and support if it made your life easier, and also report issues, and always welcome to fix whats broken :)

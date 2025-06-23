@@ -7,14 +7,11 @@ from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import NullPool
 import asyncpg
-from config import settings
+from ..config import settings
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
-
-#so we have basically basic init stuff, and then three key functions, store embeddings, search_similar
-#get embedding_count
 
 class DatabaseService:
     """Service for database operations with pgvector"""
@@ -36,7 +33,7 @@ class DatabaseService:
                 echo=False
             )
             
-            #create session factory
+            # Create session factory
             self.async_session = sessionmaker(
                 self.engine, 
                 class_=AsyncSession,
