@@ -9,10 +9,10 @@ description = "PostgreSQL-native semantic search engine with multi-modal support
 readme = "README.md"
 license = {text = "MIT"}
 authors = [
-    {name = "Pany Team", email = "hello@pany.ai"}
+    {name = "Laxman Srivastava", email = "laxmansrivastacc@gmail.com"}
 ]
 maintainers = [
-    {name = "Pany Team", email = "hello@pany.ai"}
+    {name = "Laxman Srivastava", email = "laxmansrivastacc@gmail.com"}
 ]
 keywords = [
     "semantic-search",
