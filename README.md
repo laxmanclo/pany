@@ -163,8 +163,6 @@ Report bugs at https://github.com/laxmanclo/pany.cloud/issues
 Contact: laxmansrivastacc@gmail.com
 # Results: [{"name": "Red Nike Air Max", "similarity": 0.89}, ...]
 ```
-**ROI**: 15-25% conversion rate increase = $50k-200k/year additional revenue
-
 ### **Customer Support: Instant Knowledge Base**
 **Problem**: Agents spend 10+ minutes finding answers, customers wait
 **Solution**: Semantic search across all documentation
@@ -174,26 +172,6 @@ SELECT document, answer, similarity
 FROM semantic_search('password reset not working', 'support_docs')
 WHERE similarity > 0.8;
 ```
-**ROI**: 60% faster resolution time = 2-3 additional customers served per hour
-
-### **Legal/HR: Document Discovery**
-**Problem**: Lawyers bill $500/hour searching through contracts
-**Solution**: Natural language search across all legal documents
-```python
-# Find all contracts mentioning liability clauses
-results = pany.search("liability and insurance provisions", project="legal")
-```
-**ROI**: Save 20 hours/week = $10k/week = $520k/year savings
-
-### **Real Estate: Property Matching**
-**Problem**: Clients describe dream home, agents manually search listings
-**Solution**: Semantic search combining text + property images
-```python
-# "Modern kitchen with granite countertops near good schools"
-results = pany.search(client_description, project="listings")
-```
-**ROI**: 3x faster property matching = serve 3x more clients
-
 ## 🏗️ Architecture: PostgreSQL + CLIP + FastAPI
 
 ```
