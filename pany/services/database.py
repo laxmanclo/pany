@@ -15,13 +15,13 @@ logger = logging.getLogger(__name__)
 
 class DatabaseService:
     """Service for database operations with pgvector"""
-    
+
     def __init__(self):
         self.engine = None
         self.async_session = None
         self.connection_pool = None
         self._is_ready = False
-    
+
     async def initialize(self):
         """Initialize database connection"""
         try:
@@ -32,27 +32,27 @@ class DatabaseService:
                 poolclass=NullPool,
                 echo=False
             )
-            
+
             # Create session factory
             self.async_session = sessionmaker(
-                self.engine, 
+                self.engine,
                 class_=AsyncSession,
                 expire_on_commit=False
             )
-            
+
             # Test connection
             await self.test_connection()
             self._is_ready = True
             logger.info("Database connection initialized successfully")
-            
+
         except Exception as e:
             logger.error(f"Failed to initialize database: {e}")
             raise
-    
+
     def is_ready(self) -> bool:
         """Check if database is ready"""
         return self._is_ready
-    
+
     async def test_connection(self) -> bool:
         """Test database connection"""
         try:
@@ -62,50 +62,51 @@ class DatabaseService:
         except Exception as e:
             logger.error(f"Database connection test failed: {e}")
             return False
-    
+
     async def store_embedding(
-        self, 
-        content_id: str, 
-        modality: str, 
-        content: str, 
-        embedding: List[float], 
+        self,
+        content_id: str,
+        modality: str,
+        content: str,
+        embedding: List[float],
         metadata: Dict[str, Any]
     ) -> bool:
-        """Store embedding in the database"""
+        """Store embedding in the database using pgvector"""
         try:
             async with self.async_session() as session:
                 # Convert embedding list to string format for pgvector
                 embedding_str = "[" + ",".join(map(str, embedding)) + "]"
-                
-                # Insert or update embedding
+
+                # Insert or update embedding using the unique constraint
                 query = text("""
-                    INSERT INTO embeddings (content_id, modality, content, embedding, metadata)
-                    VALUES (:content_id, :modality, :content, :embedding, :metadata)
-                    ON CONFLICT (content_id) 
-                    DO UPDATE SET 
+                    INSERT INTO embeddings (content_id, tenant_id, modality, content, embedding, metadata)
+                    VALUES (:content_id, :tenant_id, :modality, :content, :embedding::vector, :metadata)
+                    ON CONFLICT (tenant_id, content_id)
+                    DO UPDATE SET
                         modality = :modality,
                         content = :content,
-                        embedding = :embedding,
+                        embedding = :embedding::vector,
                         metadata = :metadata,
                         updated_at = CURRENT_TIMESTAMP
                 """)
-                
+
                 await session.execute(query, {
                     "content_id": content_id,
+                    "tenant_id": "default",  # Default tenant for now
                     "modality": modality,
                     "content": content,
                     "embedding": embedding_str,
                     "metadata": metadata
                 })
-                
+
                 await session.commit()
-                logger.info(f"Stored embedding for {content_id}")
+                logger.info(f"Stored embedding for {content_id} in PostgreSQL with pgvector")
                 return True
-                
+
         except Exception as e:
             logger.error(f"Failed to store embedding: {e}")
             return False
-    
+
     async def search_similar(
         self,
         query_embedding: List[float],
@@ -113,29 +114,30 @@ class DatabaseService:
         similarity_threshold: float = 0.7,
         max_results: int = 10
     ) -> List[Dict[str, Any]]:
-        """Search for similar embeddings"""
+        """Search for similar embeddings using pgvector"""
         try:
             async with self.async_session() as session:
                 # Convert embedding to string format for pgvector
                 embedding_str = "[" + ",".join(map(str, query_embedding)) + "]"
-                
-                # Build query
+
+                # Use the pgvector function from init.sql
                 query = text("""
                     SELECT * FROM find_similar_multimodal(
                         :query_embedding::vector(512),
+                        'default',  -- tenant_id
                         :target_modality,
                         :similarity_threshold,
                         :max_results
                     )
                 """)
-                
+
                 result = await session.execute(query, {
                     "query_embedding": embedding_str,
                     "target_modality": target_modality,
                     "similarity_threshold": similarity_threshold,
                     "max_results": max_results
                 })
-                
+
                 # Convert results to list of dictionaries
                 results = []
                 for row in result:
@@ -146,13 +148,14 @@ class DatabaseService:
                         "similarity": float(row.similarity),
                         "metadata": row.metadata or {}
                     })
-                
+
+                logger.info(f"Found {len(results)} similar embeddings using pgvector")
                 return results
-                
+
         except Exception as e:
             logger.error(f"Failed to search similar embeddings: {e}")
             return []
-    
+
     async def get_embedding_count(self) -> int:
         """Get total number of embeddings in database"""
         try:

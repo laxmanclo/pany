@@ -1,5 +1,20 @@
 -- Initialize the database with pgvector extension and tables
 
+-- Create user and database (if running as postgres user)
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT FROM pg_catalog.pg_roles WHERE rolname = 'pany_user') THEN
+        CREATE ROLE pany_user WITH LOGIN PASSWORD 'pany_password';
+    END IF;
+END
+$$;
+
+-- The database is created by docker-compose environment variables
+GRANT ALL PRIVILEGES ON DATABASE pany_vectordb TO pany_user;
+
+-- Connect to the new database
+\c pany_vectordb
+
 -- Enable pgvector extension
 CREATE EXTENSION IF NOT EXISTS vector;
 
@@ -92,3 +107,11 @@ BEGIN
     RETURN context_text;
 END;
 $$ LANGUAGE plpgsql;
+
+-- Connect as pany_user for proper permissions
+\c pany_vectordb pany_user
+
+-- Grant permissions to pany_user
+GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO pany_user;
+GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO pany_user;
+GRANT ALL PRIVILEGES ON ALL FUNCTIONS IN SCHEMA public TO pany_user;

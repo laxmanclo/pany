@@ -1,6 +1,7 @@
 import asyncio
 import logging
 import time
+import json
 from typing import List, Optional, Dict, Any
 from sqlalchemy import create_engine, text
 from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession
@@ -82,9 +83,9 @@ class DatabaseService:
                 
                 # Insert or update embedding
                 query = text("""
-                    INSERT INTO embeddings (content_id, modality, content, embedding, metadata)
-                    VALUES (:content_id, :modality, :content, :embedding, :metadata)
-                    ON CONFLICT (content_id) 
+                    INSERT INTO embeddings (content_id, tenant_id, modality, content, embedding, metadata)
+                    VALUES (:content_id, :tenant_id, :modality, :content, :embedding, :metadata)
+                    ON CONFLICT (tenant_id, content_id) 
                     DO UPDATE SET 
                         modality = :modality,
                         content = :content,
@@ -95,10 +96,11 @@ class DatabaseService:
                 
                 await session.execute(query, {
                     "content_id": content_id,
+                    "tenant_id": "default",
                     "modality": modality,
                     "content": content,
                     "embedding": embedding_str,
-                    "metadata": metadata
+                    "metadata": json.dumps(metadata)
                 })
                 
                 await session.commit()
@@ -122,10 +124,12 @@ class DatabaseService:
                 # Convert embedding to string format for pgvector
                 embedding_str = "[" + ",".join(map(str, query_embedding)) + "]"
                 
-                # Build query
+                # Build query - calling function with correct parameter order
                 query = text("""
-                    SELECT * FROM find_similar_multimodal(
+                    SELECT content_id, tenant_id, modality, content, similarity, metadata 
+                    FROM find_similar_multimodal(
                         :query_embedding::vector(512),
+                        'default',
                         :target_modality,
                         :similarity_threshold,
                         :max_results
